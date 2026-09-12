@@ -1,28 +1,38 @@
-<?php
-// config.php
-session_start();
+import os
+from flask import session, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 
-$dir = str_replace("\\", "/", dirname($_SERVER['SCRIPT_NAME'] ?? ""));
-$dir = rtrim($dir, "/");
-if ($dir === "/" || $dir === "\\") { $dir = ""; }
-if ($dir !== "" && $dir[0] !== "/") { $dir = "/" . $dir; }
-define("BASE_URL", $dir);
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key_here')
+    
+    # -------------------------------------------------------------
+    # لوکل ہوسٹ (Localhost) کے لیے نیچے والی سطر استعمال کریں:
+    # -------------------------------------------------------------
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/labr'
 
-$DB_HOST = "localhost";
-$DB_USER = "root";
-$DB_PASS = "";
-$DB_NAME = "labr";
+    # -------------------------------------------------------------
+    # اگر ngrok یا ریموٹ ڈیٹا بیس استعمال کرنا ہو تو یہ فارمیٹ ہوگا:
+    # SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:password@0.tcp.ngrok.io:12345/labr'
+    # -------------------------------------------------------------
 
-$conn = @new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-if ($conn->connect_error) {
-    $conn = null;
-}
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-function e($s){ return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
+db = SQLAlchemy()
 
-function require_login(){
-    if (empty($_SESSION['user_id'])) {
-        header("Location: " . BASE_URL . "/login.php");
-        exit;
-    }
-}
+# HTML characters کو محفوظ بنانے کے لیے فنکشن (PHP کے e() کی جگہ)
+def e(text):
+    if text is None:
+        return ''
+    import html
+    return html.escape(str(text))
+
+# لاگ ان چیک کرنے کا فنکشن (PHP کے require_login() کی جگہ)
+def require_login(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
