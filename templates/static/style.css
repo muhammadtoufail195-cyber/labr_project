@@ -1,0 +1,181 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #0b0b0e;
+    transition: background 0.5s ease;
+    overflow: hidden;
+}
+
+/* Light Mode Background */
+body.light-active {
+    background-color: #1a1c23;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+}
+
+/* Lamp Base & Shade */
+.lamp-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    z-index: 10;
+}
+
+/* 1. Green Shade (گرین چھتری) */
+.shade {
+    width: 130px;
+    height: 65px;
+    background: linear-gradient(135deg, #2ecc71, #1e824c); /* ڈارک گرین اور لائٹ گرین شیڈ */
+    border-top-left-radius: 70px;
+    border-top-right-radius: 70px;
+    position: relative;
+    z-index: 3;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+/* 2. Blue Stand (بلیو سٹینڈ) */
+.stand {
+    width: 10px;
+    height: 80px;
+    background: linear-gradient(to bottom, #00d2ff, #0072ff); /* شاندار الیکٹرک بلیو کلر */
+    z-index: 2;
+    border-radius: 2px;
+}
+
+/* 3. Black Base (بلیک بیس) */
+.base {
+    width: 85px;
+    height: 10px;
+    background: #111111; /* ڈارک میٹ بلیک */
+    border-radius: 5px 5px 0 0;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Yellow Tip Switch String */
+.string-container {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+    z-index: 5;
+    transition: transform 0.2s ease-out;
+}
+
+.string-container:active {
+    cursor: grabbing;
+}
+
+.string-line {
+    width: 2px;
+    height: 40px;
+    background: #a0a0a0;
+}
+
+.yellow-tip {
+    width: 14px;
+    height: 14px;
+    background-color: #ff9f43;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 159, 67, 0.9);
+}
+
+/* Light Beam Effect */
+.light-beam {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 140px solid transparent;
+    border-right: 140px solid transparent;
+    border-bottom: 250px solid rgba(255, 255, 255, 0.12);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+body.light-active .light-beam {
+    opacity: 1;
+}
+
+/* Login Form Effect */
+.login-form {
+    background: #16171f;
+    padding: 25px;
+    border-radius: 12px;
+    width: 100%;
+    border: 1px solid #282936;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+/* Unlocked State */
+body.light-active .login-form {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+.login-form h2 {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    color: #8a8aa0;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #282936;
+    border-radius: 6px;
+    background: #1f202b;
+    color: #fff;
+    outline: none;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 10px;
+    background: #0072ff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+}

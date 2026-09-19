@@ -6,9 +6,8 @@ app.secret_key = 'super_secret_labr_key_123'
 
 @app.route('/')
 def home():
-    # اگر صارف لاگ ان نہیں ہے تو سیدھا لاگ ان پیج شو کروائیں
     if 'user' not in session:
-        return render_template('login.html')
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -20,22 +19,16 @@ def login():
         
         if username == "admin" and password == "1234":
             session['user'] = username
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('home'))
         else:
             error = "Invalid username or password!"
             
     return render_template('login.html', error=error)
 
-@app.route('/dashboard')
-def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('home'))
-    return render_template('index.html')
-
 @app.route('/logout')
 def logout():
     session.pop('user', None)
-    return redirect(url_for('home'))
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8000))
