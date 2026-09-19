@@ -9,7 +9,6 @@ app.secret_key = os.environ.get(
     "labr-secret-key-123"
 )
 
-# Database initialize
 init_db()
 
 
@@ -81,7 +80,6 @@ def login():
         db.close()
 
         if user:
-
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["name"] = user["name"]
@@ -200,14 +198,12 @@ def delete_patient(patient_id):
 
 
 # =========================
-# RUN APPLICATION
+# RUN
 # =========================
 
 if __name__ == "__main__":
 
-    port = int(
-        os.environ.get("PORT", 8000)
-    )
+    port = int(os.environ.get("PORT", 8000))
 
     app.run(
         host="0.0.0.0",
