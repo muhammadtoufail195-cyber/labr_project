@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patients - LABR</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f9;
+        }
+
+        .header {
+            background: #17365d;
+            color: white;
+            padding: 18px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 15px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        }
+
+        h2 {
+            color: #17365d;
+            margin-top: 0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 80px;
+        }
+
+        button {
+            background: #17365d;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #24558f;
+        }
+
+        .search {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #17365d;
+            color: white;
+        }
+
+        .delete {
+            background: #c62828;
+            padding: 7px 12px;
+        }
+
+        .edit {
+            background: #2e7d32;
+            padding: 7px 12px;
+        }
+
+        .back {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 700px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .box {
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 700px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>LABR - Patients</h1>
+    <a class="back" href="/">← Back to Dashboard</a>
+</div>
+
+<div class="container">
+
+    <div class="box">
+        <h2>Add New Patient</h2>
+
+        <form method="POST" action="/patients">
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Patient Name</label>
+                    <input type="text" name="name" required>
+                </div>
+
+                <div>
+                    <label>MR No</label>
+                    <input type="text" name="mr_no">
+                </div>
+
+                <div>
+                    <label>Mobile</label>
+                    <input type="text" name="mobile">
+                </div>
+
+                <div>
+                    <label>Gender</label>
+                    <select name="gender">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Age</label>
+                    <input type="number" name="age">
+                </div>
+
+                <div>
+                    <label>Address</label>
+                    <textarea name="address"></textarea>
+                </div>
+
+            </div>
+
+            <br>
+
+            <button type="submit">Save Patient</button>
+
+        </form>
+    </div>
+
+
+    <div class="box">
+
+        <h2>Patient List</h2>
+
+        <input
+            class="search"
+            type="text"
+            id="search"
+            placeholder="Search patient..."
+            onkeyup="searchPatients()"
+        >
+
+        <table id="patientsTable">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>MR No</th>
+                    <th>Mobile</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% for patient in patients %}
+
+                <tr>
+                    <td>{{ patient['id'] }}</td>
+                    <td>{{ patient['name'] }}</td>
+                    <td>{{ patient['mr_no'] or '' }}</td>
+                    <td>{{ patient['mobile'] or '' }}</td>
+                    <td>{{ patient['gender'] or '' }}</td>
+                    <td>{{ patient['age'] or '' }}</td>
+
+                    <td>
+                        <a href="/patients/delete/{{ patient['id'] }}"
+                           onclick="return confirm('Delete this patient?')">
+                            <button class="delete">Delete</button>
+                        </a>
+                    </td>
+                </tr>
+
+            {% else %}
+
+                <tr>
+                    <td colspan="7">No patients found.</td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+function searchPatients() {
+
+    let input = document.getElementById("search");
+    let filter = input.value.toLowerCase();
+
+    let table = document.getElementById("patientsTable");
+    let rows = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < rows.length; i++) {
+
+        let text = rows[i].innerText.toLowerCase();
+
+        if (text.includes(filter)) {
+            rows[i].style.display = "";
+        } else {
+            rows[i].style.display = "none";
+        }
+    }
+}
+</script>
+
+</body>
+</html>
