@@ -1,53 +1,190 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
+from database import get_db, init_db
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_labr_key_123'
 
-@app.route('/')
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "labr-secret-key-123"
+)
+
+# Database initialize
+init_db()
+
+
+# =========================
+# DASHBOARD
+# =========================
+
+@app.route("/")
+def index():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    db = get_db()
+
+    total_patients = db.execute(
+        "SELECT COUNT(*) AS total FROM patients"
+    ).fetchone()["total"]
+
+    total_tests = db.execute(
+        "SELECT COUNT(*) AS total FROM tests"
+    ).fetchone()["total"]
+
+    total_receipts = db.execute(
+        "SELECT COUNT(*) AS total FROM receipts"
+    ).fetchone()["total"]
+
+    total_revenue = db.execute(
+        "SELECT COALESCE(SUM(total), 0) AS total FROM receipts"
+    ).fetchone()["total"]
+
+    db.close()
+
+    return render_template(
+        "index.html",
+        total_patients=total_patients,
+        total_tests=total_tests,
+        total_receipts=total_receipts,
+        total_revenue=total_revenue
+    )
+
+
+# =========================
+# LOGIN
+# =========================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    error = None
+
+    if request.method == "POST":
+
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        db = get_db()
+
+        user = db.execute(
+            """
+            SELECT *
+            FROM users
+            WHERE username = ?
+            AND password = ?
+            """,
+            (username, password)
+        ).fetchone()
+
+        db.close()
+
+        if user:
+
+            session["user_id"] = user["id"]
+            session["username"] = user["username"]
+            session["name"] = user["name"]
+
+            return redirect(url_for("index"))
+
+        error = "Invalid username or password!"
+
+    return render_template(
+        "login.html",
+        error=error
+    )
+
+
+# =========================
+# LOGOUT
+# =========================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(url_for("login"))
+
+
+# =========================
+# PATIENTS
+# =========================
+
 @app.route("/patients", methods=["GET", "POST"])
 def patients():
 
     if "user_id" not in session:
-        return redirect("/login")
+        return redirect(url_for("login"))
 
     db = get_db()
 
     if request.method == "POST":
 
-        name = request.form.get("name")
-        mr_no = request.form.get("mr_no")
-        mobile = request.form.get("mobile")
-        gender = request.form.get("gender")
-        age = request.form.get("age")
-        address = request.form.get("address")
+        name = request.form.get("name", "").strip()
+        mr_no = request.form.get("mr_no", "").strip()
+        mobile = request.form.get("mobile", "").strip()
+        gender = request.form.get("gender", "").strip()
+        age = request.form.get("age", "").strip()
+        address = request.form.get("address", "").strip()
 
-        db.execute("""
-            INSERT INTO patients
-            (name, mr_no, mobile, gender, age, address)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (name, mr_no, mobile, gender, age, address))
+        try:
 
-        db.commit()
+            db.execute(
+                """
+                INSERT INTO patients
+                (name, mr_no, mobile, gender, age, address)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    name,
+                    mr_no,
+                    mobile,
+                    gender,
+                    age if age else None,
+                    address
+                )
+            )
+
+            db.commit()
+
+        except Exception as e:
+
+            db.rollback()
+            db.close()
+
+            return f"Error saving patient: {e}"
+
         db.close()
 
-        return redirect("/patients")
+        return redirect(url_for("patients"))
 
-    patients = db.execute("""
-        SELECT * FROM patients
+    patient_list = db.execute(
+        """
+        SELECT *
+        FROM patients
         ORDER BY id DESC
-    """).fetchall()
+        """
+    ).fetchall()
 
     db.close()
 
-    return render_template("patients.html", patients=patients)
+    return render_template(
+        "patients.html",
+        patients=patient_list
+    )
 
+
+# =========================
+# DELETE PATIENT
+# =========================
 
 @app.route("/patients/delete/<int:patient_id>")
 def delete_patient(patient_id):
 
     if "user_id" not in session:
-        return redirect("/login")
+        return redirect(url_for("login"))
 
     db = get_db()
 
@@ -59,32 +196,20 @@ def delete_patient(patient_id):
     db.commit()
     db.close()
 
-    return redirect("/patients")
-def home():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html')
+    return redirect(url_for("patients"))
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        if username == "admin" and password == "1234":
-            session['user'] = username
-            return redirect(url_for('home'))
-        else:
-            error = "Invalid username or password!"
-            
-    return render_template('login.html', error=error)
 
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    return redirect(url_for('login'))
+# =========================
+# RUN APPLICATION
+# =========================
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+
+    port = int(
+        os.environ.get("PORT", 8000)
+    )
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
