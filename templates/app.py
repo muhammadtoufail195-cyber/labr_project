@@ -1,7 +1,8 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = 'super_secret_labr_key_123'
 
 @app.route('/')
 def home():
@@ -15,13 +16,13 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-
+        
         if username == "admin" and password == "1234":
             session['user'] = username
             return redirect(url_for('home'))
         else:
             error = "Invalid username or password!"
-
+            
     return render_template('login.html', error=error)
 
 @app.route('/logout')
@@ -30,5 +31,5 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
-
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0', port=port)
