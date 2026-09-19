@@ -1,5 +1,12 @@
-FROM php:8.2-apache
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-COPY . /var/www/html/
-EXPOSE 80
+FROM python:3.10-slim
 
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
